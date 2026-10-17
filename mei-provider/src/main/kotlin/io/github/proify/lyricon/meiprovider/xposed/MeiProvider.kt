@@ -202,6 +202,8 @@ internal class MeiProvider(
 
     private fun neteaseEnrichEnabled(): Boolean = Configs.neteaseEnrich(preferences)
 
+    private fun amllDbEnabled(): Boolean = Configs.amllDb(preferences)
+
     private fun sourceMode(): String = Configs.sourceMode(preferences)
 
     // ---------------------------------------------------------------- 上下文
@@ -411,15 +413,16 @@ internal class MeiProvider(
             // 都是一次到 LSPosed daemon 的 IPC, 放主线程会卡住宿主切歌。
             val translation = translationEnabled()
             val enrich = neteaseEnrichEnabled()
+            val amll = amllDbEnabled()
             val cloud = netSearchEnabled()
-            // 两个联网开关都关了就没什么可预取的
-            if (!enrich && !cloud) return@execute
+            // 联网开关全关了就没什么可预取的
+            if (!enrich && !cloud && !amll) return@execute
             if (LyricRepository.cached(id, translation) != null) return@execute
             if (!LyricRepository.beginPrefetch(id, translation)) return@execute
 
             var local: LyricCandidate? = null
 
-            @Suppress("NAME_SHADOWING") fun amllCandidate(id: String): LyricCandidate? {
+            @Suppress("NAME_SHADOWING") fun amllFetch(id: String): LyricCandidate? {
                 val lyric = runCatching { AmllDbApi.fetch(id) }
                     .onFailure { logger.warn("AmllDb prefetch failed: ${it.message}") }
                     .getOrNull() ?: return null
@@ -430,11 +433,11 @@ internal class MeiProvider(
             }
 
             // AMLL DB —— 按 ID 精确命中, 永远不会错歌, 有逐字直接用
-            val amll = if (enrich) id?.let { amllCandidate(it) } else null
-            if (amll?.isVerbatim == true) {
-                LyricRepository.store(id, translation, amll)
+            val amllCandidate = if (amll) id?.let { amllFetch(it) } else null
+            if (amllCandidate?.isVerbatim == true) {
+                LyricRepository.store(id, translation, amllCandidate)
                 LyricRepository.endPrefetch(id, translation)
-                logger.debug("Prefetched next: ${amll.describe()}")
+                logger.debug("Prefetched next: ${amllCandidate.describe()}")
                 return@execute
             }
 
@@ -458,7 +461,7 @@ internal class MeiProvider(
 
             // 已经拿到逐字了, 不用再多打一次云端请求
             if (local?.isVerbatim == true || !cloud || title.isNullOrBlank()) {
-                val winner = listOfNotNull(amll?.takeIf { !it.isEmpty }, local).best()
+                val winner = listOfNotNull(amllCandidate?.takeIf { !it.isEmpty }, local).best()
                 LyricRepository.store(id, translation, winner)
                 LyricRepository.endPrefetch(id, translation)
                 logger.debug("Prefetched next: ${winner?.describe() ?: "无"}")
@@ -472,7 +475,7 @@ internal class MeiProvider(
                 onSuccess = { rich ->
                     val winner = listOfNotNull(
                         LyricCandidate(rich, "云端预取").takeIf { !it.isEmpty },
-                        amll?.takeIf { !it.isEmpty },
+                        amllCandidate?.takeIf { !it.isEmpty },
                         local,
                     ).best()
                     LyricRepository.store(id, translation, winner)
@@ -480,7 +483,7 @@ internal class MeiProvider(
                     logger.debug("Prefetched next: ${winner?.describe() ?: "无"}")
                 },
                 onFailure = {
-                    val winner = listOfNotNull(amll?.takeIf { !it.isEmpty }, local).best()
+                    val winner = listOfNotNull(amllCandidate?.takeIf { !it.isEmpty }, local).best()
                     LyricRepository.store(id, translation, winner)
                     LyricRepository.endPrefetch(id, translation)
                     logger.debug("Prefetched next (cloud failed): ${winner?.describe() ?: "无"}")
@@ -791,6 +794,7 @@ internal class MeiProvider(
             val mode = sourceMode()
             val translation = translationEnabled()
             val enrich = neteaseEnrichEnabled() && NetEaseApi.isNetEaseId(songId)
+            val amll = amllDbEnabled() && NetEaseApi.isNetEaseId(songId)
             val allowLocal = mode != SourceMode.CLOUD
             val allowCloud = mode != SourceMode.MEI && netSearchEnabled()
 
@@ -805,10 +809,10 @@ internal class MeiProvider(
 
             // 0.5) AMLL DB —— 按网易云 ID 精确命中, 逐字质量最高, 永远不会错歌。
             //      覆盖率有限, 没有就返回 null 继续走后面的源。
-            val amll = if (enrich) songId?.let { amllCandidate(it) } else null
-            if (amll?.isVerbatim == true) {
-                logger.debug("AmllDb exact hit (verbatim): ${amll.describe()}")
-                publish(base, songId, amll, current)
+            val amllCandidate = if (amll) songId?.let { amllCandidate(it) } else null
+            if (amllCandidate?.isVerbatim == true) {
+                logger.debug("AmllDb exact hit (verbatim): ${amllCandidate.describe()}")
+                publish(base, songId, amllCandidate, current)
                 return@execute
             }
 
@@ -828,7 +832,7 @@ internal class MeiProvider(
             }
 
             if (!allowCloud || title.isNullOrBlank()) {
-                val fallback = listOfNotNull(amll, local).best()
+                val fallback = listOfNotNull(amllCandidate, local).best()
                 if (fallback != null) publish(base, songId, fallback, current) else retryIfCurrent(current)
                 return@execute
             }
@@ -844,13 +848,13 @@ internal class MeiProvider(
                     val cloud = LyricCandidate(rich, "云端匹配")
                     val winner = listOfNotNull(
                         cloud.takeIf { !it.isEmpty },
-                        amll,
+                        amllCandidate,
                         local,
                     ).best()
                     if (winner != null) {
                         logger.debug(
                             "Candidates cloud=${cloud.describe()} " +
-                                "amll=${amll?.describe() ?: "无"} " +
+                                "amll=${amllCandidate?.describe() ?: "无"} " +
                                 "local=${local?.describe() ?: "无"} -> ${winner.describe()}"
                         )
                         publish(base, songId, winner, current)
@@ -859,7 +863,7 @@ internal class MeiProvider(
                     }
                 },
                 onFailure = {
-                    val fallback = listOfNotNull(amll, local).best()
+                    val fallback = listOfNotNull(amllCandidate, local).best()
                     if (fallback != null) publish(base, songId, fallback, current) else retryIfCurrent(current)
                 }
             )

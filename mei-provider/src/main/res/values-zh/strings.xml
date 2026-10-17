@@ -24,6 +24,8 @@
     <string name="category_network">网络</string>
     <string name="title_net_search">联网搜索歌词</string>
     <string name="desc_net_search">Mei 没有对应歌词时，自动从云端搜索</string>
+    <string name="title_amll_db">AMLL 逐字歌词库</string>
+    <string name="desc_amll_db">按歌曲 ID 精确获取逐字歌词，质量最高，但可能较慢</string>
 
     <string name="title_lyric_offset">歌词偏移</string>
     <string name="desc_lyric_offset">歌词比音频快就调负值、慢就调正值（单位毫秒）</string>

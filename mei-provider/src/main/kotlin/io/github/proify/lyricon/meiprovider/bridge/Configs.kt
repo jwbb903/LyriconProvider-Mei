@@ -45,6 +45,14 @@ object Configs {
     const val NETEASE_ENRICH = "netease_enrich"
 
     /**
+     * 是否从 AMLL TTML DB 按歌曲 ID 精确取逐字歌词。
+     *
+     * 命中时质量最高 (TTML 逐字 + 不会错歌), 但仓库在国内需要走代理镜像,
+     * 未命中的歌要等镜像返回 404 —— 感觉慢可以关掉。
+     */
+    const val AMLL_DB = "amll_db"
+
+    /**
      * 歌词时间轴偏移 (毫秒, -2000..2000)。
      * 正值 = 歌词提前, 负值 = 歌词延后。
      * 兜底音频链路固定延迟导致的整体不同步。
@@ -55,6 +63,7 @@ object Configs {
     const val DEFAULT_SOURCE_MODE = SourceMode.AUTO
     const val DEFAULT_NET_SEARCH = true
     const val DEFAULT_NETEASE_ENRICH = true
+    const val DEFAULT_AMLL_DB = true
     const val DEFAULT_LYRIC_OFFSET_MS = 0
     const val MIN_LYRIC_OFFSET_MS = -2000
     const val MAX_LYRIC_OFFSET_MS = 2000
@@ -70,6 +79,10 @@ object Configs {
     fun neteaseEnrich(preferences: SharedPreferences?): Boolean =
         preferences?.getBoolean(NETEASE_ENRICH, DEFAULT_NETEASE_ENRICH)
             ?: DEFAULT_NETEASE_ENRICH
+
+    fun amllDb(preferences: SharedPreferences?): Boolean =
+        preferences?.getBoolean(AMLL_DB, DEFAULT_AMLL_DB)
+            ?: DEFAULT_AMLL_DB
 
     fun lyricOffsetMs(preferences: SharedPreferences?): Int =
         preferences?.getInt(LYRIC_OFFSET_MS, DEFAULT_LYRIC_OFFSET_MS)

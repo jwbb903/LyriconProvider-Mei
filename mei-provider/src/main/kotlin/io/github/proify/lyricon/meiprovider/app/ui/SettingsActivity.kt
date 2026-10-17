@@ -77,6 +77,9 @@ class SettingsActivity : AppCompatActivity() {
         binding.switchNeteaseEnrich.setOnCheckedChangeListener { _, isChecked ->
             store(Configs.NETEASE_ENRICH, isChecked)
         }
+        binding.switchAmllDb.setOnCheckedChangeListener { _, isChecked ->
+            store(Configs.AMLL_DB, isChecked)
+        }
         binding.switchNetSearch.setOnCheckedChangeListener { _, isChecked ->
             store(Configs.NET_SEARCH, isChecked)
         }
@@ -104,6 +107,8 @@ class SettingsActivity : AppCompatActivity() {
             Configs.displayTranslation(store)
         binding.switchNeteaseEnrich.isChecked =
             Configs.neteaseEnrich(store)
+        binding.switchAmllDb.isChecked =
+            Configs.amllDb(store)
         binding.switchNetSearch.isChecked =
             Configs.netSearch(store)
         binding.sliderLyricOffset.value =

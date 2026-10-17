@@ -26,6 +26,8 @@
     <string name="desc_netease_enrich">Fetch lyrics and translation from the NetEase API. Required for many Chinese songs</string>
     <string name="title_net_search">Online Lyric Search</string>
     <string name="desc_net_search">Search from the cloud when Mei has no lyric for the track</string>
+    <string name="title_amll_db">AMLL TTML Database</string>
+    <string name="desc_amll_db">Fetch word-by-word lyrics from AMLL DB by song ID. Highest quality, but can be slow</string>
 
     <string name="title_lyric_offset">Lyric Offset</string>
     <string name="desc_lyric_offset">Fine-tune lyric timing if it runs ahead of or behind the audio</string>
