@@ -1,0 +1,36 @@
+<!--
+  ~ Copyright 2026 Proify, Tomakino
+  ~ Licensed under the Apache License, Version 2.0
+  ~ http://www.apache.org/licenses/LICENSE-2.0
+  -->
+
+<resources>
+    <string name="app_name">Mei Lyric Provider</string>
+    <string name="xposed_description">Provides Mei (com.ljyh.mei) lyric support for Lyricon</string>
+
+    <string name="settings_title">Plugin Settings</string>
+
+    <string name="category_display">Display Settings</string>
+    <string name="title_translation">Enable Translation</string>
+    <string name="desc_translation">Display translations if available in lyrics</string>
+
+    <string name="category_source">Lyric Source</string>
+    <string name="title_lyric_source">Lyric Source</string>
+    <string name="desc_lyric_source">Auto: prefer Mei\'s own lyrics, fall back to cloud search</string>
+    <string name="source_auto">Auto (Mei first, then cloud)</string>
+    <string name="source_mei">Mei only (verbatim from cache)</string>
+    <string name="source_cloud">Cloud only (LrcLib / QQ Music)</string>
+
+    <string name="category_network">Network</string>
+    <string name="title_netease_enrich">NetEase Lyric Enrichment</string>
+    <string name="desc_netease_enrich">Fetch lyrics and translation from the NetEase API. Required for many Chinese songs</string>
+    <string name="title_net_search">Online Lyric Search</string>
+    <string name="desc_net_search">Search from the cloud when Mei has no lyric for the track</string>
+
+    <string name="title_lyric_offset">Lyric Offset</string>
+    <string name="desc_lyric_offset">Fine-tune lyric timing if it runs ahead of or behind the audio</string>
+
+    <string name="lyricon_module_description">Lyric adapter for Mei Music (NetEase third-party client). Supports verbatim (YRC/QRC/TTML) lyrics from Mei\'s cache plus online lyric fetching.</string>
+    <string name="lyricon_module_category">Local Player</string>
+    <string name="lyricon_module_author">Proify</string>
+</resources>
